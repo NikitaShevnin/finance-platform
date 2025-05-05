@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://analytics-db:5432/analyticsdb
+    username: analytics
+    password: pass
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
