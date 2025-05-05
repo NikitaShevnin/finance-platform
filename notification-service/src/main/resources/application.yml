@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://notification-db:5432/notificationdb
+    username: notification
+    password: pass
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true

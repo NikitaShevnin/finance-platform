@@ -1,0 +1,165 @@
+services:
+  # PostgreSQL для user-service
+  user-db:
+    image: postgres:14
+    container_name: user-db
+    environment:
+      POSTGRES_DB: userdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    networks:
+      - finance-network
+
+  # PostgreSQL для transaction-service
+  transaction-db:
+    image: postgres:14
+    container_name: transaction-db
+    environment:
+      POSTGRES_DB: transactiondb
+      POSTGRES_USER: transaction
+      POSTGRES_PASSWORD: pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - transaction-data:/var/lib/postgresql/data
+    networks:
+      - finance-network
+
+  # PostgreSQL для analytics-service
+  analytics-db:
+    image: postgres:14
+    container_name: analytics-db
+    environment:
+      POSTGRES_DB: analyticsdb
+      POSTGRES_USER: analytics
+      POSTGRES_PASSWORD: pass
+    ports:
+      - "5435:5432"
+    volumes:
+      - analytics-data:/var/lib/postgresql/data
+    networks:
+      - finance-network
+
+  # PostgreSQL для notification-service
+  notification-db:
+    image: postgres:14
+    container_name: notification-db
+    environment:
+      POSTGRES_DB: notificationdb
+      POSTGRES_USER: notification
+      POSTGRES_PASSWORD: pass
+    ports:
+      - "5436:5432"
+    volumes:
+      - notification-data:/var/lib/postgresql/data
+    networks:
+      - finance-network
+
+  # Kafka
+  kafka:
+    image: wurstmeister/kafka:latest
+    container_name: kafka
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9093
+    ports:
+      - "9093:9093"
+    depends_on:
+      - zookeeper
+    networks:
+      - finance-network
+
+  # Zookeeper
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - finance-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka
+      - zookeeper
+      - user-service
+    networks:
+      - finance-network
+
+  # User Service
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    container_name: user-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - user-db
+      - kafka
+    networks:
+      - finance-network
+
+  # Transaction Service
+  transaction-service:
+    build:
+      context: .
+      dockerfile: transaction-service/Dockerfile
+    container_name: transaction-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - transaction-db
+      - kafka
+    networks:
+      - finance-network
+
+  # Analytics Service
+  analytics-service:
+    build:
+      context: .
+      dockerfile: analytics-service/Dockerfile
+    container_name: analytics-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - analytics-db
+      - kafka
+    networks:
+      - finance-network
+
+  # Notification Service
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    container_name: notification-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      - notification-db
+      - kafka
+    networks:
+      - finance-network
+
+volumes:
+  user-db-data:
+  transaction-data:
+  analytics-data:
+  notification-data:
+
+networks:
+  finance-network:
+    driver: bridge

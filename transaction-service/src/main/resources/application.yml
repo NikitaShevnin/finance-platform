@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://transaction-db:5432/transactiondb
+    username: transaction
+    password: pass
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
